@@ -7,12 +7,12 @@ import java.util.NoSuchElementException;
 
 public final class MyCollection<E> implements Collection<E> {
 
-    private int size = 10;
+    private int size = 1;
 
-    private Object[] elementData = new Object[size];
+    private Object[] elementData = new Object[size + 1];
 
     @Override
-    public boolean add(final E e) {
+    public boolean add(E e) {
         if (size == elementData.length) {
             elementData = Arrays.copyOf(elementData, (int) (size * 1.5f));
         }
@@ -39,7 +39,8 @@ public final class MyCollection<E> implements Collection<E> {
     public boolean contains(final Object o) {
         MyIterator iterator = new MyIterator();
         while (iterator.hasNext()) {
-            if (iterator.next().equals(o)) {
+            Object elem = iterator.next();
+            if ((elem == null && o == null) || (elem != null && elem.equals(o))) {
                 return true;
             }
         }
@@ -48,21 +49,22 @@ public final class MyCollection<E> implements Collection<E> {
 
     @Override
     public Object[] toArray() {
-        return elementData;
+        return Arrays.copyOf(elementData, elementData.length);
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        if (a.length < elementData.length) {
+        if (a.length >= elementData.length) {
             a = (T[]) Arrays.copyOf(elementData, elementData.length);
-        } else {
-            int i = 0;
-            while (i < elementData.length) {
-                a[i++] = (T) elementData[i];
-            }
-            while (i < a.length) {
-                a[i++] = null;
-            }
+            return a;
+        }
+        int i = 0;
+        while (i < elementData.length) {
+            a[i] = (T) elementData[i];
+            i++;
+        }
+        while (i < a.length) {
+            a[i++] = null;
         }
         return a;
     }
@@ -81,21 +83,22 @@ public final class MyCollection<E> implements Collection<E> {
 
     @Override
     public boolean containsAll(final Collection<?> c) {
-        Iterator iterator = c.iterator();
-        while (iterator.hasNext()) {
-            Object elem = iterator.next();
-            MyIterator myIterator = new MyIterator();
-            boolean elemContains = false;
-            while (myIterator.hasNext()) {
-                if (myIterator.next().equals(elem)) {
-                    elemContains = true;
+        Iterator iteratorC = c.iterator();
+        boolean result = true;
+        while (iteratorC.hasNext()) {
+            Object elem = iteratorC.next();
+            MyIterator iterator = new MyIterator();
+            boolean resultIndividual = false;
+            while (iterator.hasNext()) {
+                Object myElem = iterator.next();
+                if ((myElem == null && elem == null)
+                        || (myElem != null && elem != null && myElem.equals(elem))) {
+                    resultIndividual = true;
                 }
             }
-            if (!elemContains) {
-                return false;
-            }
+            result = result && resultIndividual;
         }
-        return true;
+        return result;
     }
 
     @Override
@@ -112,13 +115,15 @@ public final class MyCollection<E> implements Collection<E> {
 
     @Override
     public boolean removeAll(final Collection<?> c) {
-        MyIterator iterator = new MyIterator();
+        Iterator iteratorC = c.iterator();
         boolean result = false;
-        while (iterator.hasNext()) {
-            Object elem = iterator.next();
-            Iterator iteratorC = c.iterator();
-            while (iteratorC.hasNext()) {
-                if (iteratorC.next().equals(elem)) {
+        while (iteratorC.hasNext()) {
+            Object elem = iteratorC.next();
+            MyIterator iterator = new MyIterator();
+            while (iterator.hasNext()) {
+                Object myElem = iterator.next();
+                if ((myElem == null && elem == null)
+                        || (myElem != null && elem != null && myElem.equals(elem))) {
                     iterator.remove();
                     result = true;
                 }
@@ -178,14 +183,15 @@ public final class MyCollection<E> implements Collection<E> {
             if (cursor == 0 || flagRemove) {
                 throw new IllegalStateException();
             } else {
-                Object[] newElementData = new Object[size - 1];
-                for (int i = 0; i < elementData.length; i++) {
+                Object[] newElementData = new Object[size];
+                for (int i = 0; i < elementData.length - 1; i++) {
                     if (i < cursor - 1) {
                         newElementData[i] = elementData[i];
-                    } else if (i >= cursor) {
-                        newElementData[i - 1] = elementData[i];
+                    } else if (i >= cursor - 1) {
+                        newElementData[i] = elementData[i + 1];
                     }
                 }
+                size--;
                 elementData = newElementData;
                 flagRemove = true;
             }
