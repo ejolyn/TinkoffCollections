@@ -9,7 +9,7 @@ public final class MyCollection<E> implements Collection<E> {
 
     private int size = 0;
 
-    private Object[] elementData = new Object[size + 1];
+    private Object[] elementData = new Object[1];
 
     @Override
     public boolean add(E e) {
@@ -55,11 +55,11 @@ public final class MyCollection<E> implements Collection<E> {
     @Override
     public <T> T[] toArray(T[] a) {
         if (a.length >= elementData.length) {
-            a = (T[]) Arrays.copyOf(elementData, elementData.length);
+            a = (T[]) Arrays.copyOf(elementData, elementData.length, a.getClass());
             return a;
         }
         int i = 0;
-        while (i < elementData.length) {
+        while (i < size) {
             a[i] = (T) elementData[i];
             i++;
         }
@@ -136,17 +136,21 @@ public final class MyCollection<E> implements Collection<E> {
 
     @Override
     public boolean retainAll(final Collection<?> c) {
-        Iterator iteratorC = c.iterator();
+        MyIterator iterator = new MyIterator();
         boolean result = false;
-        while (iteratorC.hasNext()) {
-            Object elem = iteratorC.next();
-            MyIterator iterator = new MyIterator();
-            while (iterator.hasNext()) {
-                Object myElem = iterator.next();
+        while (iterator.hasNext()) {
+            Iterator iteratorC = c.iterator();
+            Object elem = iterator.next();
+            boolean resultIndividual = false;
+            while (iteratorC.hasNext()) {
+                Object myElem = iteratorC.next();
                 if ((myElem == null && elem == null)
                         || (myElem != null && elem != null && myElem.equals(elem))) {
+                    resultIndividual = true;
                     break;
                 }
+            }
+            if (!resultIndividual) {
                 iterator.remove();
                 result = true;
             }
@@ -156,11 +160,10 @@ public final class MyCollection<E> implements Collection<E> {
 
     @Override
     public void clear() {
-        MyIterator iterator = new MyIterator();
-        while (iterator.hasNext()) {
-            iterator.next();
-            iterator.remove();
+        for (int i = 0; i < size; i++) {
+            elementData[i] = null;
         }
+        size = 0;
     }
 
     private class MyIterator<T> implements Iterator<T> {
