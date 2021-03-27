@@ -49,22 +49,19 @@ public final class MyCollection<E> implements Collection<E> {
 
     @Override
     public Object[] toArray() {
-        return Arrays.copyOf(elementData, elementData.length);
+        return Arrays.copyOf(elementData, size);
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        if (a.length >= elementData.length) {
-            a = (T[]) Arrays.copyOf(elementData, elementData.length, a.getClass());
+        if (a.length <= size) {
+            a = (T[]) Arrays.copyOf(elementData, size, a.getClass());
             return a;
         }
         int i = 0;
         while (i < size) {
             a[i] = (T) elementData[i];
             i++;
-        }
-        while (i < a.length) {
-            a[i++] = null;
         }
         return a;
     }
@@ -73,7 +70,9 @@ public final class MyCollection<E> implements Collection<E> {
     public boolean remove(final Object o) {
         MyIterator iterator = new MyIterator();
         while (iterator.hasNext()) {
-            if (iterator.next().equals(o)) {
+            Object elem = iterator.next();
+            if ((o == null && elem == null)
+                    || (o != null && elem != null && o.equals(elem))) {
                 iterator.remove();
                 return true;
             }
